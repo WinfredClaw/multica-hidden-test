@@ -1,53 +1,39 @@
 # multica-hidden-test
 
-Draft a standalone Multica SOP for research that survives a hidden evaluation. A parent helps a child develop a general strategy on public evidence, then evaluates one frozen candidate on a parent-held `lockin val` set.
+Draft a standalone Multica research SOP with **Reviewer** and **Developer** roles. Installation fixes the task, hidden `lockin val` and bubblewrap policy in YAML. Reviewer helps Developer build a strategy on public evidence, then evaluates one frozen candidate on the predefined holdout.
 
-**Status: design draft.** This repository describes the proposed product and its first implementation scope. It contains no installer, executable SOP or live evaluation results.
+**Status: design draft.** Includes the workflow and example configuration. The installer and execution scripts are not implemented.
 
-## Two phases
+## Issue tree and two phases
 
-```mermaid
-flowchart TD
-    P[Parent: agree public objective and seal lockin val]
-    D[Phase 1 — parent and child: develop strategy on public evidence]
-    L[Child submits exact candidate and strategy; parent records lock]
-    E[Phase 2 — parent: evaluate locked candidate on lockin val]
-    R[Parent: report result and limits; accept or record target miss]
-    P --> D
-    D -->|public feedback and revisions| D
-    D --> L
-    L --> E
-    E --> R
+```text
+MAIN — existing root: dispatch and receive
+└── Reviewer [exp] — sub-issue: coach, lock, evaluate and accept
+    └── Developer [exp] — sub-sub-issue: develop inside bubblewrap
 ```
 
-`lockin val` means the evaluation cases, answers and case-specific details reserved by the parent before development. The child knows the task, allowed inputs, evaluation method and success criterion. The child does not see the reserved cases or receive scores from them while choosing a strategy.
+1. **Develop:** Reviewer coaches Developer using public development results. Developer implements, checks and revises in the same experiment issue.
+2. **Evaluate:** Developer freezes its strategy, configuration, exact source revision and canonical artifact. Reviewer runs the predefined evaluator against that candidate on `lockin val`, then reports the result to MAIN.
 
-The parent coaches from public development results: ask for a mechanism, suggest public counterexamples, and help the child test whether its approach transfers. The parent must not turn knowledge of hidden cases into hints. At the phase boundary, freeze the strategy, source revision, dependencies and any submitted artifact. The parent then evaluates that exact candidate once. A miss is a research result; editing against that result would consume the holdout for future use.
+Both descendant issues carry `exp`, with no `dev` or `query` lifecycle label. Reviewer is Developer's direct parent. MAIN dispatches requests and receives the Reviewer result.
 
-This design interprets the two phases as **collaborative development, then locked hidden evaluation**. A finite hidden set provides evidence about generalization within its declared scope; it cannot prove universal generalization.
+The holdout is fixed **at installation**, before either experiment starts. Hidden results cannot guide revisions against that same holdout. A miss is a research result; further informed development needs a fresh untouched holdout. A finite holdout supports a bounded generalization claim.
 
-## Modeled on multica-featssship
+## Installation guidance
 
-Follow [multica-featssship's standalone packaging and handoff pattern](https://github.com/Winfred666/multica-featssship/tree/e4d8ff30cf8dc10e009034625ef0d198feb94503): one repository, README-led installation, repository-owned procedures, distinct native agent identities and comments for handoffs. Keep generated packages and runtime state untracked. Do not depend on system distribution, review or delivery SOP packages.
+Follow [multica-featssship's README-guided installation and portable packaging](https://github.com/Winfred666/multica-featssship/tree/e4d8ff30cf8dc10e009034625ef0d198feb94503), using YAML for this product:
 
-The research parent has a larger role than featssship's dispatch-only MAIN: it owns the hidden evaluation boundary, coaches development and makes the final research decision. The child owns strategy and implementation. Historical parent/child delivery and review procedures are design references; their executable packages are not runtime dependencies.
+1. Copy [config.example.yaml](config.example.yaml) to a Reviewer-only location outside Git and every Developer mount. Fill in the target, existing root, distinct agent IDs, public task, commands, measured baseline, metric, acceptance criterion, budget, fixed holdout and sandbox paths.
+2. The future installer asks only for missing answers and saves them to that YAML. It resolves paths and the fixed dataset revision, checks bubblewrap with the selected runtime, and saves reused agent/skill IDs. No experiment starts with unresolved configuration.
+3. Preserve the existing root, history and unrelated bindings. Generate the public project/issue context and Developer package from an explicit public field list; never copy the private YAML or `lockin_val` section into them.
+4. Generate the Developer launcher from the saved sandbox policy. Check public input access and denied holdout/config access before dispatch. Later runs reuse the saved values without choosing a new holdout or changing its evaluator.
 
-## Proposed installation
+The install contract predefines roles, hierarchy, experiment baseline/direction, data, commands, criterion, budget and sandbox. Candidate revisions, issue IDs and measured results are runtime outputs. Reinstallation reuses successful native writes; a changed holdout defines a new attempt.
 
-A future one-time installer runs in the target repository and reuses saved answers. It selects the workspace, target project, existing parent issue, repository, distinct Parent and Researcher agents, public task and inputs, allowed resources, development command, unchanged evaluation command, success criterion and time budget. The parent configures the private evaluation location through a parent-only channel; that location and its contents must never enter child packages or shared configuration.
+## Minimal implementation
 
-Preserve the existing parent issue, its history and unrelated bindings. Publish only the public research contract in the target project and child description. MAIN may be the parent; no extra coordinator or evaluator agent is required. Each invocation uses its own native task identity and reconstructs progress from the permitted native records.
+Keep one root dispatch SOP, supporting Reviewer/Developer procedures and ordinary install/launch scripts in this repository. Use the current Symbolic-SoP template and native Multica CLI handoffs without submodules or system distribution/review/delivery SOP dependencies.
 
-Installation must verify that the child cannot read the hidden inputs, parent-private records or evaluator credentials, including through the Multica CLI. A separate agent name, Git branch or folder does not enforce this. Use existing access controls or an owner-operated evaluator. If those are unavailable, report that the privacy prerequisite is unmet before starting a trial.
+The launch script translates installed YAML into bubblewrap arguments for Developer execution. Reviewer retains access to `lockin val`; Developer receives only public inputs, its prepared checkout and the selected runtime files. Bind this policy before starting the Developer `exp` sub-sub-issue. See the [workflow contract](docs/workflow.md) for the sandbox and result handoffs.
 
-## First implementation scope
-
-Build one complete path: configure the two roles, seal the holdout, dispatch one research child, iterate on public evidence, lock one candidate, evaluate it, and return one concise result to the parent thread. Use the existing task's evaluator and artifact contract. Add no benchmark platform or new scoring rubric.
-
-The intended package has a root Parent SOP, a fixed Researcher skill and a parent-only evaluation procedure. Follow featssship's portable local-skill layout and the current Symbolic-SoP template when implementation begins. Installation remains an ordinary script. Keep procedures and their required runtime files in this repository without submodules.
-
-Keep focused checks under `tests/`. One disposable trial should demonstrate a public correction, an exact candidate lock, denied child access to hidden material, evaluation of the locked revision and one result receipt. Exercise a hidden miss without reopening the same holdout for tuning. Simulated role choices establish script behavior; a later isolated native trial must establish routing and the actual access boundary.
-
-Implementation and isolated trials belong in this project's future development work. Existing Research, RSI, shared services and installed SOPs stay outside that work's scope.
-
-Read the [workflow contract](docs/workflow.md) for ownership, visibility, transitions, results and failure handling.
+One disposable trial should show YAML reuse, the two nested `exp` issues, a public correction, denied hidden-data access, an exact candidate lock and one result to MAIN. Keep focused checks under `tests/`. Existing Research/RSI workflows, shared services and historical backups are outside implementation scope.

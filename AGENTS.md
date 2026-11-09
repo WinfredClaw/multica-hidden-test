@@ -1,15 +1,15 @@
 # Developing multica-hidden-test
 
-Read README.md and docs/workflow.md. This repository currently holds a design draft. Implement only when assigned development work; do not install it into Research or RSI as part of drafting.
+Read README.md, config.example.yaml and docs/workflow.md. This repository holds a design draft. Implement only when assigned; do not install it into Research or RSI while drafting.
 
-Build the smallest standalone Parent–Researcher workflow modeled on multica-featssship. Keep one root Parent SOP, a fixed Researcher skill, parent-only evaluation and a README-guided installer. Use repository-owned procedures, the current Symbolic-SoP template and native Multica CLI handoffs. Do not depend on system distribution, review or delivery SOPs. Keep the package atomic without submodules.
+Keep the roles **Reviewer** and **Developer**. The existing MAIN root creates a Reviewer sub-issue labeled `exp`; Reviewer creates a Developer sub-sub-issue labeled `exp`. Reviewer coaches, locks, evaluates and accepts Developer. MAIN dispatches and accepts Reviewer's result. Follow the target workspace's acceptance policy and human holds.
 
-Preserve the two phases: coach with public development evidence, then evaluate one exact locked candidate on a holdout sealed before development. Publish the objective, metric and criterion up front. Never use hidden scores or hidden-derived hints to guide child revisions in the same attempt. A negative result remains a negative result.
+Define all task, holdout, command, metric, criterion, budget and sandbox settings at installation in Reviewer-only YAML. Follow featssship's README-guided install/reuse pattern. Never choose a new holdout during development or copy private configuration into child-readable packages or records.
 
-Distinct agent identities and Git worktrees do not isolate data. Use existing enforceable access controls or an owner-operated evaluator. Keep hidden inputs, labels, private records and credentials outside every child-readable path and API. Stop an attempted trial when that prerequisite is missing. Do not add an evaluation service or sandbox platform to compensate without an explicit assignment.
+Use a small script to apply the installed bubblewrap policy to Developer execution before dispatch. Expose only its public inputs, prepared checkout and selected runtime. Preserve the hidden inputs, answers, private YAML and Reviewer credentials outside that boundary. Do not substitute a benchmark-only wrapper for confinement of the Developer's tools.
 
-Reuse the task's evaluator, data partitions, allowed resources and canonical artifact contract. Parent owns acceptance and requested integration; child owns source and strategy. Respect native task identities, human holds and the target workspace's acceptance policy. Preserve unrelated skills, agents, services and data.
+Phase 1 uses public evidence for corrections. Phase 2 evaluates one exact frozen candidate on installed `lockin val`. No hidden-driven retuning against the same holdout; retain honest misses. Reuse the task's evaluator and canonical artifact contract.
 
-Keep implementation checks in tests/. Use focused checks and one disposable trial for the changed handoff. Distinguish simulated script checks from an isolated live proof of routing and privacy. Keep generated skill packages, runtime state, logs, local answers and evaluation data out of Git.
+Keep repository-owned procedures atomic, using the current Symbolic-SoP template and native Multica CLI handoffs. Installation is an ordinary script. No submodules or system distribution/review/delivery SOP dependencies. Keep focused checks in tests/ and use one disposable nested trial. Private YAML, generated packages, logs and runtime state stay out of Git.
 
-Use ponytail. Deliver concise native evidence with links. Do not claim executable behavior or generalization from this draft.
+Use ponytail. Preserve unrelated agents, skills, services and data. Deliver concise evidence with links and distinguish draft design, script checks and live runtime proof.

@@ -1,0 +1,39 @@
+# Design example: copy outside Git and Developer mounts; complete at installation.
+workspace_id: "<workspace UUID>"
+project_id: "<target project UUID>"
+root_issue_id: "<existing MAIN issue UUID>"
+repository: "https://github.com/owner/target"
+reviewer_id: "<Reviewer agent UUID>"
+developer_id: "<different Developer agent UUID>"
+
+# Public fields only are copied to project/issue context and Developer packages.
+task:
+  question: "<research question>"
+  scope: "<allowed source changes and resources>"
+  time_budget_seconds: 3600
+  submission_path: "<canonical repository-relative artifact>"
+development:
+  data_dir: "/srv/research/public"
+  command: ["<supplied development executable>", "<argument>"]
+experiment:
+  baseline_score: null # Installer collects the measured public baseline.
+  metric: "<existing metric>"
+  direction: max # Set min or max for the installed metric.
+  success_criterion: "<existing acceptance criterion>"
+
+# Reviewer-only fields: fixed before either exp issue starts.
+lockin_val:
+  data_dir: "/srv/reviewer/lockin-val"
+  dataset_revision: "<fixed revision or explicit selection>"
+  evaluation_command: ["<supplied evaluator executable>", "<argument>"]
+  private_results_dir: "/srv/reviewer/results"
+
+# Script adds the prepared Developer checkout at /work, public data at
+# /data/public, and disposable home/tmp. It never binds the host root.
+sandbox:
+  engine: bubblewrap
+  read_only_paths: ["/usr", "/bin", "/lib", "/lib64"]
+  network: false # Confirm selected runtime support during installation.
+  environment:
+    PATH: "/usr/local/bin:/usr/bin:/bin"
+    HOME: "/home/developer"
