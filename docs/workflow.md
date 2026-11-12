@@ -1,45 +1,154 @@
-# Draft workflow contract
+# Shipping flow
 
-Installation defines the experiment in private YAML. MAIN dispatches a Reviewer `exp` sub-issue; Reviewer dispatches a Developer `exp` sub-sub-issue with its installed bubblewrap policy. Reviewer coaches development, owns hidden evaluation and returns one result to MAIN.
+Installation has two states:
 
-## Installation fixes the contract
+```dot
+digraph installation {
+  rankdir=LR; node [shape=box];
+  grilling [label="grilling: align config with the requested workflow"];
+  finished [label="finished: MAIN linked to master; installer done"];
+  grilling -> grilling [label="edit JSON merge patch; attach config; ask edit or confirm; end this turn silently if not outer-confirmed"];
+  grilling -> finished [label="confirmed by human: install roles/skills and create/reuse MAIN"];
+}
+```
 
-Use [config.example.yaml](../config.example.yaml) as the input shape. Complete it during README-guided installation, not during a research run. Save resolved absolute paths, the fixed holdout revision/selection, unchanged evaluator command, public baseline and score direction, success criterion, time budget and sandbox policy before dispatch. Validate the existing evaluator and canonical artifact contract rather than adding a new scoring system.
+Defaults and field comments guide each edit toward the requested workflow. Keep
+settings that already fit, and edit again as needed. Ask one human question only
+when context leaves something unclear. Editing does not create
+roles, skills or MAIN. Confirmation must be a human reply after the latest config
+comment. The human only replies `confirm`; the agent runs `confirmed` and the
+script finds that reply automatically. The JSON role key is `delegator`. The installer owns one logical master JSON
+attachment containing installation settings and defaults. MAIN receives only
+its explicit owner/filename reference in `featssship.config`, not copied defaults
+or an installer-parent link. It subscribes CEO and runs independently after the
+installer finishes. Re-entry preserves settings and starts another MAIN;
+unfinished cycles retain their immediate MAIN checkpoint for retries.
 
-Keep the full YAML, holdout and private evaluation records outside Git, Developer mounts, generated packages and child-readable native records. Only public task/configuration fields enter project descriptions and either issue. The private config belongs to Reviewer; distinct agent IDs and issue nesting alone do not hide files or comments.
+Attachment revisions temporarily replace unavailable native mutable deliverables.
+`common.py` isolates upload and authenticated download/read, with TODOs for native
+update/preview. Grilling publishes a confirmation prompt with each attachment revision in the
+existing thread; other revisions use an empty-rendering comment. Readers select the latest matching owner/filename. References
+remain valid after edits, across issues. Serialize edits; immutable attachments
+provide no compare-and-swap. Old revisions remain history. Defaults are created
+only when the master document is absent. Nothing caches JSON locally or in SoP
+state. Cached guidance contains routing text only, not rendered configuration.
+See [README](../README.md#configuration) for editing. Runtime resolution has no
+metadata fallback or ancestry lookup. Stale owned MAIN configuration can be
+deleted on upgrade; retain live execution checkpoints and unrelated data.
 
-Preserve the existing root and distinct Reviewer/Developer identities. Reuse saved answers and successful installation IDs on rerun. Each descendant has exactly the `exp` lifecycle label. Prepare role binding, repository/workdir and sandbox before dispatch; parked issues do not start until ready. Reviewer receives the installed holdout access, while Developer receives the restricted profile; do not blindly inherit Reviewer's filesystem access into Developer.
+The project description still owns verification guidance and repository/scope
+context, never selected review questions or installed identities.
+The installer action graphs live in [its controller](../installation/controller.py).
 
-## Developer bubblewrap launcher
+MAIN runs one sequential batch with `--thread <request UUID>` and optional
+`--config '{"issues":[{}]}'` (one default item). Grilling shows a fresh JSON working
+copy; `refresh --config-file PATH` replaces the whole batch and invalidates approval.
+Dispatch requires the original member's confirmation or acceptance after that
+draft before creating children or branches. Partial failures retain checkpoints
+and retry in grilling without restarting successful children. Once a child exists,
+resume dispatch rather than refreshing.
 
-The proposed script reads the installed YAML and constructs an argument vector for `bwrap` without shell interpolation. The same installed policy must cover Developer's agent/tool execution and subprocesses; wrapping only the development benchmark leaves other tools able to read host files.
+Children share the delegation attachment by item index; universal settings resolve
+from the installer master and verification commands from the project description.
 
-Start from bubblewrap's empty filesystem. Mount the configured runtime paths read-only, public development data read-only at `/data/public`, and the prepared Developer checkout at `/work` with its necessary public Git storage. Create disposable home and temporary directories. Do not mount the host root, Reviewer home, full installation YAML, holdout or private logs. Resolve mount paths and reject any mount that exposes private material, including through shared Git objects.
+MAIN passes a short name;
+the configured direction prefix formats the feature branch. The child uses its
+prepared issue worktree for one shared [procedure](../delegation/dev-rev/controller.py):
 
-Use private user/PID/IPC/UTS namespaces with fresh `/proc` and `/dev`, drop capabilities, clear inherited environment and set only installed environment values. Apply the installed network policy; model transport and native handoffs must work under that policy without an unsandboxed fallback. Close inherited file descriptors except those explicitly needed by the selected runtime. Generate this launch profile once at installation and bind it to the Developer experiment before starting it.
+```dot
+digraph develop_review {
+  rankdir=LR; node [shape=box];
+  develop [label="Developer: implement, test and submit"];
+  review [label="Reviewer: inspect exact revision"];
+  approval [shape=diamond, label="manual config?"];
+  approve [label="Reviewer: auto-approved action"];
+  manual_approve [label="manual_approve: wait for outer instruction"];
+  merge_result [shape=diamond, label="Merge conflict / rework?"];
+  finished [label="finished: cleaned, pushed if approved, reported", peripheries=2];
+  develop -> review [label="submit"];
+  review -> develop [label="rework"];
+  review -> approval [label="approve"];
+  approval -> approve [label="automatic"];
+  approval -> manual_approve [label="manual"];
+  approve -> merge_result [label="final_approve: merge_approved"];
+  manual_approve -> merge_result [label="final_approve: same merge_approved; ONLY outer allowed"];
+  manual_approve -> develop [label="rework: Reviewer returns corrections"];
+  develop -> finished [label="cancel: cleanup only"];
+  review -> finished [label="cancel: cleanup only"];
+  manual_approve -> finished [label="cancel: cleanup only; ONLY outer allowed"];
+  merge_result -> develop [label="rework"];
+  merge_result -> finished [label="merged: cleanup then push automatically"];
+}
+```
 
-Installation checks the actual selected runtime can read public inputs and write its output but cannot read the holdout, full YAML or Reviewer credentials. A failed bubblewrap or runtime check leaves the experiment undispatched. This is a small launcher using the configured runtime, not a new sandbox service. Bubblewrap's [security guidance](https://github.com/containers/bubblewrap#sandbox-security) and [option reference](https://github.com/containers/bubblewrap/blob/main/bwrap.xml) define the underlying mount/namespace behavior.
+Both roles use the current issue folder and the same metadata record. The native
+agent ID guards each phase. MAIN's `name: tree-horizontal-more` plus installed
+`branch_prefix: feat/frontend` binds `feat/frontend/tree-horizontal-more` before dispatch.
+Developer owns only develop; Reviewer owns all subsequent states. Neither role names or creates the branch.
+Later actions reject another branch or repository; review and integration also reject a changed HEAD.
+Dispatch prepares the metadata-selected local branch and one issue-owned worktree.
+`manual` is a boolean inherited from installation and overridable per batch item.
+Only manual mode creates/pushes a remote feature branch; its first push leases
+the reserved revision and corrections lease the prior submission. Automatic
+features stay local until their approved result is pushed to the existing parent branch.
+Features share no branch registry or SOP-wide lock.
+A manual config adds the manual label before the child starts. Review never
+creates a checkout or switches branches. Automated review approval hands the
+Reviewer the `final_approve` action; manual approval waits in `manual_approve` for
+human or MAIN input. Both states use `final_approve` to call the same `merge_approved`
+function. It checks the exact approved HEAD, merges/tests, and fast-forwards local
+main in its clean existing worktree (or atomically advances its unoccupied ref).
+No feature worktree changes branch. The merge-result diamond comes before terminal
+finished: conflicts return to develop with the unresolved merge preserved, for a
+resolution merge commit and another review. Success continues directly through
+local feature cleanup, parent push and MAIN delivery, then enters finished.
+A rejected push restores the local feature branch/worktree for rework. There is
+no reported state, final-state action or finish command.
 
-## Phase 1: develop on public evidence
+Cancellation is available in develop and review for scope, Git/version
+infrastructure or edit-budget blockers, and in manual_approve for outer
+cancellation. Preserve or commit edits first. The script deletes the local
+feature tree/branch, marks the issue cancelled and enters finished without tests,
+integration or pushes. Reviewer may invoke this fixed cleanup but remains
+read-only for source; approved integration runs the scripted checks. Human acceptance owns done.
 
-Developer starts with a valid public baseline and preserves a usable checkpoint before refining. It implements the strategy and reports the mechanism, development result and likely limits in its own issue.
+State owners resolve native `{id, name}` in the wrapper for actor checks,
+handoffs and tiny HTML labels.
 
-Reviewer reads the public source and evidence, asks for concrete corrections or public counterexamples, and returns work to the same Developer issue. Advice must follow from public evidence; do not turn hidden cases, failures or scores into hints. Both issues remain experiments throughout this loop.
+Each successful delivery
+posts one concise recipient mention using the declared state's native owner name, without
+TODO, self-reference or SHA. Reports to MAIN are receipt-only notes under the
+original dispatch comment, using native `/note` without mentions or steering. The batch attachment retains the original dispatch thread.
+The acting agent interprets superior instructions; scripts verify identity and
+ordering, not literal approval wording. Blocked recipient delivery fails the
+handoff. Steering requires a matching running
+recipient with `can_supplement: true`; otherwise the mention takes the normal route.
+The sender ends this turn silently after handoff: "Rework sent, directly and silently end this turn"
+for rework, the superior wait for manual approval, and otherwise
+"Delivery done this round, directly and silently end this turn". Metadata and HTML
+retain the receiving role's guidance. Failures remain errors. This is guidance,
+not enforced turn completion or a measured token saving; enforcement belongs to
+the runner ([multica-RSI#40](https://github.com/Winfred666/multica-RSI/issues/40)).
+Wrong-role action calls exit nonzero on stderr without JSON or writes.
 
-When ready, Developer submits its exact source commit, strategy/configuration, canonical artifact, public result and reproduction command as `in_review`. Reviewer checks the public contract and records the accepted candidate lock. Configuration fixed at installation remains unchanged; the lock binds that configuration to this candidate. A candidate change before hidden evaluation requires a fresh lock.
+Select `review` to inspect the issue's criteria and selected process questions.
+The selected direction supplies universal review questions; the delegation adds
+only its request-specific acceptance/question overrides. Reviewer returns one `--finding` with `approve` or `rework`.
+Question order is presentation order, not per-question stepping or parallel tasks.
 
-## Phase 2: evaluate the frozen candidate
+The HTML graph comes from `Workflow`; action docstrings explain local logic.
+`DEBUG` defaults to `true` in the source bundles and newly built packages' `config.json`.
+During native runs, each state change or completion publishes an HTML graph
+highlighting the actual resulting state. Selecting a node only inspects its
+guidance; it does not advance the workflow. Package rebuilds retain existing
+settings, so enable `DEBUG` explicitly in older packages. No renderer service
+is required. Callbacks use the running wrapper’s resolved file path; temporary
+preview builds show temporary paths, not installed skill locations.
 
-Reviewer runs the predefined evaluator against the exact locked candidate and installed `lockin val`, using the supplied evaluator's input/answer boundary. Candidate code does not receive evaluator credentials or unrestricted access to the holdout answers. Do not use the latest branch tip or select among candidates with repeated hidden scores.
+`installation/` owns the reusable common module and runtime. The builder includes
+them in each standalone installation, delegation and dev-rev package; source
+controllers remain in their respective procedure folders.
 
-Evaluate once, then release the permitted aggregate result. An infrastructure failure can justify reproducing the identical candidate without changes or feedback-driven selection; record why. An ordinary candidate error or low score is a result. Hidden feedback cannot reopen Phase 1 on the same holdout. Preserve a miss honestly; a new informed attempt needs fresh untouched cases. If hidden evidence leaks, mark this evaluation compromised instead of claiming independence.
-
-## Acceptance and result handoff
-
-Reviewer owns Developer acceptance and any requested integration of the reviewed source, under the target workspace's acceptance policy and human holds. Developer does not mark itself `done`. Changes after hidden evaluation do not inherit the earlier hidden result.
-
-Reviewer delivers its result as `in_review` to MAIN, its direct parent. MAIN accepts the Reviewer experiment. Report the question, locked candidate, public result, permitted hidden aggregate, whether the installed criterion was met and the limit of that conclusion. Keep private cases and traces out of both issue threads. A valid negative research result can finish the bounded attempt without being called a successful solution.
-
-Each role runs under its own native task identity. Comments carry public corrections, locks, verdicts and delivery evidence; configuration carries bindings. Reconcile uncertain writes before retrying so resumption creates neither duplicate children nor duplicate final receipts.
-
-The first implementation check is one disposable nested experiment exercising YAML reuse, sandbox access, public rework, lock, evaluation and result receipt. Simulated script checks do not prove native runtime confinement; verify that boundary in one isolated native trial before claiming it works. This repository currently supplies a draft only.
+Implementation note: delegation declares only `grilling`; runtime-owned `FINISHED`
+is the ringed-circle target that deletes only its SOP key and emits callback-free
+exit guidance. See the [runtime TODO](../installation/wrapper.py) for completion modes.
